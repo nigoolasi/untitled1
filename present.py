@@ -10,8 +10,6 @@ selpc = 0.6
 Pm = 0.2  # 变异概率
 
 
-
-
 def geneanswer(i, j):
     result = []
     while i < max and j < max:
@@ -28,36 +26,37 @@ def geneanswer(i, j):
         result.append((i, j))
     return result
 
+
 def cal(x):
     return 2 * pow(x, 2)
 
 
 def calcutepower(R):
-    car = 100
+    car = 1000
     map = data.map
     k1 = 0
     for r in R:
         k2 = map[r[0]][r[1]]
         e = k2 - k1
+        # print(e)
         car = car - cal(e)
-        print("汽车完整度：%s" % car)
+        # print("汽车完整度：%s" % car)
         k1 = k2
     print("染色体的适应度：%s" % car)
     return car
-    pass
 
 
 def choose():
     population = []
     chroms = data.route
-    chooselist = (calcutepower(r) for r in chroms)
-    print("适应度列表：?%s" % chooselist)
+    chooselist = list(calcutepower(r) for r in chroms)
+    print("适应度列表：%s" % chooselist)
     chooseposible = ((q, w / sum(chooselist)) for q, w in enumerate(chooselist))
     chooseposible = list(chooseposible)
     sorted(chooseposible, key=lambda x: x[1])
     print("选择概率%s" % chooseposible)
     m = 0
-    while m < max * selpc:
+    while m < len(chooseposible) * selpc:
         population.append(chroms[chooseposible[m][0]])
         m = m + 1
     print("经过选择后的种群%s" % population)
@@ -69,6 +68,8 @@ def crossgene(p):
     population = []
     population = population + p
     inxe = len(p) * pc
+    inxe = int(inxe)
+    print(inxe)
     i = 0
     while i < inxe:
         temp = []
@@ -84,27 +85,27 @@ def crossgene(p):
         ent1 = p[pos1]
         ent2 = p[pos2]
         if ent1[w1][0] <= ent2[w2][0]:
-            temp = temp + list((for q, w in enumerate(ent1) if q < w1))
+            temp = temp + list((w for q, w in enumerate(ent1) if q < w1))
             j = 0
             while j < ent2[w2][0] - ent1[w1][0]:
-                temp.append(ent1[w1][0] + j, ent1[w1][1])
+                temp.append((ent1[w1][0] + j, ent1[w1][1]))
                 j = j + 1
             j = 0
             while j < ent2[w2][1] - ent1[w1][1]:
-                temp.append(ent1[w1][0], ent1[w1][1] + j)
+                temp.append((ent1[w1][0], ent1[w1][1] + j))
                 j = j + 1
-            temp = temp + list((for q, w in enumerate(ent2) if q > w2))
+            temp = temp + list((w for q, w in enumerate(ent2) if q > w2))
         else:
-            temp = temp + list((for q, w in enumerate(ent2) if q < w2))
+            temp = temp + list((w for q, w in enumerate(ent2) if q < w2))
             j = 0
             while j < ent1[w1][0] - ent2[w2][0]:
-                temp.append(ent2[w2][0] + j, ent1[w1][1])
+                temp.append((ent2[w2][0] + j, ent1[w1][1]))
                 j = j + 1
             j = 0
             while j < ent1[w1][1] - ent2[w2][1]:
-                temp.append(ent1[w1][0], ent1[w1][1] + j)
+                temp.append((ent1[w1][0], ent1[w1][1] + j))
                 j = j + 1
-            temp = temp + list((for q, w in enumerate(ent1) if q > w1))
+            temp = temp + list((w for q, w in enumerate(ent1) if q > w1))
         population.append(temp)
         i = i + 1
     print("交配后的种群%s" % population)
@@ -120,24 +121,34 @@ def changenosignal(p):
     for q in p:
         lk = lk + len(q)
     pos = lk * pm
-    whichc = pos / max
-    genpos = divmod(pos, max)
-    print("变异的点%s"%whichc)
+    print(pos)
+    genpos = divmod(pos, max)[1]
+    genpos = int(genpos)
+    whichc = divmod(pos, max)[0]
+    whichc = int(whichc)
+    print("变异的点%s" % whichc)
+    print("变异的点%s" % genpos)
     if p[whichc][genpos][0] == p[whichc][genpos - 1][0]:
-        p[whichc][genpos][0] = (p[whichc][genpos][0] + 1, p[whichc][genpos][1] - 1)
+        del p[whichc][genpos]
+        p[whichc].insert(whichc, (p[whichc][genpos][0] + 1, p[whichc][genpos][1] - 1))
     else:
-        p[whichc][genpos][0] = (p[whichc][genpos][0] - 1, p[whichc][genpos][1] + 1)
-    population=population+p
-    population=population+geneanswer(population[whichc][genpos][0],population[whichc][genpos][1])
+        del p[whichc][genpos]
+        p[whichc].insert(whichc, (p[whichc][genpos][0] - 1, p[whichc][genpos][1] + 1))
+    population = population + p
+    population = population + geneanswer(population[whichc][genpos][0], population[whichc][genpos][1])
     print("变异后的种群%s" % population)
     pass
 
 
 def begin():
+    p = data.route
+    y = 0
+    while y < 3:
+        print("第%s次迭代" % y)
+        p = choose()
+        p = crossgene(p)
+        p = changenosignal(p)
+        y = y + 1
 
-    pass
 
-
-if __name__ == "main":
-    for item in data.route:
-        pass
+begin()
