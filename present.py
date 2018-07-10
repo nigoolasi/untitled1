@@ -6,26 +6,32 @@ import data
 
 max = 30
 pc = 0.8  # 交差概率
-selpc = 0.6
+selpc = 0.6#自然选择的概率
 Pm = 0.2  # 变异概率
 
-import logging as log
+import logging
 
-def geneanswer(i, j):
-    result = []
-    while i < max and j < max:
-        t = random.randint(0, 1)
-        if t == 1 and i <= max - 2:
-            i = i + 1
-        elif j <= max - 2:
-            j = j + 1
-        else:
-            if t == 1:
-                j = j + 1
-            else:
-                i = i + 1
-        result.append((i, j))
-    return result
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+log = logging.getLogger(__name__)
+
+leb = 29
+
+
+def initanswer(result, item, ditem=(leb, leb)):
+    if item[0] >= ditem[0]:
+        if item[1] >= ditem[1]:
+            result.append(ditem)
+            return result
+    pos = random.randint(0, 1)
+    if pos == 0 and item[0] < ditem[0]:
+        result.append(item)
+        temp = (item[0] + 1, item[1])
+        return initanswer(result, temp, ditem)
+    elif pos == 1 and item[1] < ditem[1]:
+        result.append(item)
+        temp = (item[0], item[1] + 1)
+        return initanswer(result, temp, ditem)
+    return initanswer(result, item, ditem)
 
 
 def cal(x):
@@ -37,12 +43,14 @@ def calcutepower(R):
     map = data.map
     k1 = 0
     for r in R:
+        # log.info(r[0])
+        # log.info(r[1])
         k2 = map[r[0]][r[1]]
         e = k2 - k1
         # print(e)
         car = car - cal(e)
         k1 = k2
-    print("染色体的适应度：%s" % car)
+    # print("染色体的适应度：%s" % car)
     return car
 
 
@@ -59,11 +67,14 @@ def choose(p):
     while m < len(chooseposible) * selpc:
         population.append(chroms[chooseposible[m][0]])
         m = m + 1
+
+    log.info("自然选择出的个体数量：%s"%len(population))
     return population
 
 
 # 交换基因随机选取两个个体进行交配，这样的话就可以进行新的个体产生
 def crossgene(p):
+    log.info("交配前的种群中个体数量%s" % len(p))
     population = []
     population = population + p
     inxe = len(p) * pc
@@ -72,42 +83,40 @@ def crossgene(p):
     i = 0
     while i < inxe:
         temp = []
-        pos1 = random.randint(0, inxe)-1  # 父亲
-        # print("父亲染色体：%s" % pos1)
-        pos2 = random.randint(0, inxe)-1  # 母亲
-        # print("母亲染色体：%s" % pos2)
+        pos1 = random.randint(0, inxe) - 1  # 父亲
+        print("父亲染色体：%s" % pos1)
+        pos2 = random.randint(0, inxe) - 1  # 母亲
+        print("母亲染色体：%s" % pos2)
         # 此处不再判断是不是相等，如果相等就按自我交配处处理
-        w1 = random.randint(0, len(p[pos1])-1)
-        # print("父亲基因交换位置：%s" % w1)
-        w2 = random.randint(0, len(p[pos2])-1)
-        # print("母亲基因交换位置：%s" % w2)
+        w1 = random.randint(0, len(p[pos1]) - 1)
+        print("父亲基因交换位置：%s" % w1)
+        w2 = random.randint(0, len(p[pos2]) - 1)
+        print("母亲基因交换位置：%s" % w2)
         ent1 = p[pos1]
         ent2 = p[pos2]
-        if ent1[w1][0] <= ent2[w2][0]:
-            temp = temp + list((w for q, w in enumerate(ent1) if q < w1))
-            j = 0
-            while j < ent2[w2][0] - ent1[w1][0]:
-                temp.append((ent1[w1][0] + j, ent1[w1][1]))
-                j = j + 1
-            j = 0
-            while j < ent2[w2][1] - ent1[w1][1]:
-                temp.append((ent1[w1][0], ent1[w1][1] + j))
-                j = j + 1
-            temp = temp + list((w for q, w in enumerate(ent2) if q > w2))
-        else:
-            temp = temp + list((w for q, w in enumerate(ent2) if q < w2))
-            j = 0
-            while j < ent1[w1][0] - ent2[w2][0]:
-                temp.append((ent2[w2][0] + j, ent1[w1][1]))
-                j = j + 1
-            j = 0
-            while j < ent1[w1][1] - ent2[w2][1]:
-                temp.append((ent1[w1][0], ent1[w1][1] + j))
-                j = j + 1
-            temp = temp + list((w for q, w in enumerate(ent1) if q > w1))
-        population.append(temp)
+        log.info("父亲：%s" % ent1)
+        log.info("母亲：%s" % ent2)
+        if ent1[w1][0] <= ent2[w2][0]:  # 取父亲的前面的基因
+            father = temp + list((w for q, w in enumerate(ent1) if q < w1))
+            mather = list((w for q, w in enumerate(ent2) if q > w2))
+            child = initanswer(temp, ent1[w1], ent2[w2])
+            log.info("来自父亲基因：%s" % father)
+            log.info("来自母亲基因：%s" % mather)
+            log.info("孩子自己的基因：%s" % child)
+            child = father + child + mather
+        else:  ##取母亲的前面的基因
+            father = temp + list((w for q, w in enumerate(ent1) if q > w1))
+            mather = list((w for q, w in enumerate(ent2) if q < w2))
+            child = initanswer(temp, ent2[w2], ent1[w1])
+            log.info("来自父亲基因：%s" % father)
+            log.info("来自母亲基因：%s" % mather)
+            log.info("孩子自己的基因：%s" % child)
+            child = mather + child + father
+        log.info("孩子：%s" % child)
+        population.append(child)
         i = i + 1
-    # print("交配后的种群%s" % population)
+    log.info("交配后的种群中个体数量%s" % len(population))
+    print("交配后的种群%s" % population)
     return population
 
 
@@ -121,22 +130,29 @@ def changenosignal(p):
         lk = lk + len(q)
     pos = lk * pm
     print(pos)
-    genpos = divmod(pos, 2*max-2)[1]
+    genpos = divmod(pos, 2 * max - 2)[1]
     genpos = int(genpos)
-    whichc = divmod(pos, 2*max-2)[0]
+    whichc = divmod(pos, 2 * max - 2)[0]
     whichc = int(whichc)
     print("变异的点%s" % whichc)
     print("变异的点%s" % genpos)
-    if p[whichc][genpos][0] == p[whichc][genpos - 1][0]:
-        del p[whichc][genpos]
-        p[whichc].insert(whichc, (p[whichc][genpos][0] + 1, p[whichc][genpos][1] - 1))
-        log.info(p[whichc])
+    tem = p[whichc]
+    k = genpos
+    del tem[k + 1:]
+    log.info(tem)
+    if tem[genpos][0] == tem[genpos - 1][0]:
+        op = tem[genpos]
+        del tem[genpos]
+        tem.append((op[0] + 1, op[1] - 1))
     else:
-        del p[whichc][genpos]
-        p[whichc].insert(whichc, (p[whichc][genpos][0] - 1, p[whichc][genpos][1] + 1))
-        log.info(p[whichc])
+        op = tem[genpos]
+        del tem[genpos]
+        tem.append((op[0] - 1, op[1] + 1))
+    u = []
+    u = initanswer(u, tem[genpos])
+    tem = tem + u
+    log.info(tem)
     population = population + p
-    population = population + geneanswer(population[whichc][genpos][0], population[whichc][genpos][1])
     # print("变异后的种群%s" % population)
     return population
     pass
@@ -150,6 +166,7 @@ def begin():
         p = choose(p)
         p = crossgene(p)
         p = changenosignal(p)
+        p = choose(p)
         print(p)
         y = y + 1
 
