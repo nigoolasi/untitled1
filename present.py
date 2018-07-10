@@ -9,6 +9,7 @@ pc = 0.8  # 交差概率
 selpc = 0.6
 Pm = 0.2  # 变异概率
 
+import logging as log
 
 def geneanswer(i, j):
     result = []
@@ -40,16 +41,15 @@ def calcutepower(R):
         e = k2 - k1
         # print(e)
         car = car - cal(e)
-        # print("汽车完整度：%s" % car)
         k1 = k2
     print("染色体的适应度：%s" % car)
     return car
 
 
-def choose():
+def choose(p):
     population = []
-    chroms = data.route
-    chooselist = list(calcutepower(r) for r in chroms)
+    chroms = p
+    chooselist = list(calcutepower(r) for r in p)
     print("适应度列表：%s" % chooselist)
     chooseposible = ((q, w / sum(chooselist)) for q, w in enumerate(chooselist))
     chooseposible = list(chooseposible)
@@ -59,7 +59,6 @@ def choose():
     while m < len(chooseposible) * selpc:
         population.append(chroms[chooseposible[m][0]])
         m = m + 1
-    print("经过选择后的种群%s" % population)
     return population
 
 
@@ -73,15 +72,15 @@ def crossgene(p):
     i = 0
     while i < inxe:
         temp = []
-        pos1 = random.randint(0, inxe)  # 父亲
-        print("父亲染色体：%s" % pos1)
-        pos2 = random.randint(0, inxe)  # 母亲
-        print("母亲染色体：%s" % pos2)
+        pos1 = random.randint(0, inxe)-1  # 父亲
+        # print("父亲染色体：%s" % pos1)
+        pos2 = random.randint(0, inxe)-1  # 母亲
+        # print("母亲染色体：%s" % pos2)
         # 此处不再判断是不是相等，如果相等就按自我交配处处理
-        w1 = random.randint(0, len(p[pos1]))
-        print("父亲基因交换位置：%s" % w1)
-        w2 = random.randint(0, len(p[pos2]))
-        print("母亲基因交换位置：%s" % w2)
+        w1 = random.randint(0, len(p[pos1])-1)
+        # print("父亲基因交换位置：%s" % w1)
+        w2 = random.randint(0, len(p[pos2])-1)
+        # print("母亲基因交换位置：%s" % w2)
         ent1 = p[pos1]
         ent2 = p[pos2]
         if ent1[w1][0] <= ent2[w2][0]:
@@ -108,7 +107,7 @@ def crossgene(p):
             temp = temp + list((w for q, w in enumerate(ent1) if q > w1))
         population.append(temp)
         i = i + 1
-    print("交配后的种群%s" % population)
+    # print("交配后的种群%s" % population)
     return population
 
 
@@ -122,32 +121,36 @@ def changenosignal(p):
         lk = lk + len(q)
     pos = lk * pm
     print(pos)
-    genpos = divmod(pos, max)[1]
+    genpos = divmod(pos, 2*max-2)[1]
     genpos = int(genpos)
-    whichc = divmod(pos, max)[0]
+    whichc = divmod(pos, 2*max-2)[0]
     whichc = int(whichc)
     print("变异的点%s" % whichc)
     print("变异的点%s" % genpos)
     if p[whichc][genpos][0] == p[whichc][genpos - 1][0]:
         del p[whichc][genpos]
         p[whichc].insert(whichc, (p[whichc][genpos][0] + 1, p[whichc][genpos][1] - 1))
+        log.info(p[whichc])
     else:
         del p[whichc][genpos]
         p[whichc].insert(whichc, (p[whichc][genpos][0] - 1, p[whichc][genpos][1] + 1))
+        log.info(p[whichc])
     population = population + p
     population = population + geneanswer(population[whichc][genpos][0], population[whichc][genpos][1])
-    print("变异后的种群%s" % population)
+    # print("变异后的种群%s" % population)
+    return population
     pass
 
 
 def begin():
-    p = data.route
     y = 0
+    p = data.route
     while y < 3:
         print("第%s次迭代" % y)
-        p = choose()
+        p = choose(p)
         p = crossgene(p)
         p = changenosignal(p)
+        print(p)
         y = y + 1
 
 
