@@ -2,17 +2,16 @@
 # 计算公式：y=2*x^2
 #
 import random
-import data
-import os
+
+from yichuan import data
 
 max = 30
 pc = 0.8  # 交差概率
 selpc = 0.6  # 自然选择的概率
 Pm = 0.2  # 变异概率
 import os
-import logging
 import logging.config
-filepath = os.path.join(os.path.dirname(__file__), 'log.conf')
+filepath = os.path.join(os.path.dirname(__file__), '../log.conf')
 print(filepath)
 logging.config.fileConfig(filepath)
 log = logging.getLogger()
@@ -177,7 +176,7 @@ def changenosignal(p):
 def begin():
     y = 0
     p = data.route
-    while y < 51000:
+    while y < 610:
         log.info("第%s次迭代" % y)
         p = choose(p)
         p = crossgene(p)
