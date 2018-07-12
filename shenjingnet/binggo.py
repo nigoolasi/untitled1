@@ -8,7 +8,7 @@ import numpy as np
 
 np.random.seed(1)
 
-font = fm.FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc')
+# font = fm.FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc')
 matplotlib.rcParams['figure.figsize'] = (10.0, 8.0)
 
 
@@ -193,8 +193,8 @@ class NeuralNetwork:
         # 当前层的偏置一般给0就行，偏置是个1xnᵢ的矩阵，nᵢ为第i层的节点个数，例如第1层为4个节点，那么：
         #    b1 = array([ 0.,  0.,  0.,  0.])
 
-
-
+        #[1, 2, 4, 10, 20, 50]
+        print(self.layers_strcuture)
         for l in range(1, self.layers_num):
             self.w["w" + str(l)] = np.random.randn(self.layers_strcuture[l], self.layers_strcuture[l - 1]) / np.sqrt(
                 self.layers_strcuture[l - 1])
@@ -443,7 +443,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(16, 32))
 
     # 用sklearn的数据样本集，产生2种颜色的坐标点，noise是噪声系数，噪声越大，2种颜色的点分布越凌乱
-    xy, colors = sklearn.datasets.make_moons(60, noise=1.0)
+    xy, colors = sklearn.datasets.make_moons(100, noise=1.0)
 
     # 因为点的颜色是1bit，我们设计一个神经网络，输出层有2个神经元。
     # 标定输出[1,0]为红色点，输出[0,1]为蓝色点
@@ -456,12 +456,13 @@ if __name__ == "__main__":
 
     expect_output = np.array(expect_output).T
 
+
     # 设计3层网络，改变隐藏层神经元的个数，观察神经网络分类红蓝点的效果
-    hidden_layer_neuron_num_list = [1, 2, 4, 10, 20, 50]
+    hidden_layer_neuron_num_list = [1, 2, 4,8,10]
 
     for i, hidden_layer_neuron_num in enumerate(hidden_layer_neuron_num_list):
         plt.subplot(5, 2, i + 1)
-        plt.title(u'隐藏层神经元数量: %d' % hidden_layer_neuron_num, fontproperties=font)
+        plt.title(u'隐藏层神经元数量: %d' % hidden_layer_neuron_num)
 
         nn = NeuralNetwork([2, hidden_layer_neuron_num, 2], True)
 
